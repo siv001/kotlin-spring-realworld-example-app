@@ -10,6 +10,11 @@ import org.mindrot.jbcrypt.BCrypt
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.*
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
+
+
+
 
 @Service
 class UserService(val userRepository: UserRepository,
@@ -30,13 +35,15 @@ class UserService(val userRepository: UserRepository,
     fun currentUser(): User = currentUser.get()
 
     fun newToken(user: User): String {
+        val secretKey: SecretKey = KeyGenerator.getInstance(jwtSecret).generateKey()
         return Jwts.builder()
                 .setIssuedAt(Date())
                 .setSubject(user.email)
                 .setIssuer(jwtIssuer)
                 .setExpiration(Date(System.currentTimeMillis() + 10 * 24 * 60 * 60 * 1000)) // 10 days
-                .signWith(SignatureAlgorithm.HS256, jwtSecret).compact()
+                .signWith(secretKey, SignatureAlgorithm.HS256).compact()
     }
+
 
     fun validToken(token: String, user: User): Boolean {
         val claims = Jwts.parser().setSigningKey(jwtSecret)
