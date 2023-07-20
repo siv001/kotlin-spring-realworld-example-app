@@ -46,10 +46,13 @@ class UserService(val userRepository: UserRepository,
 
 
     fun validToken(token: String, user: User): Boolean {
-        val claims = Jwts.parser().setSigningKey(jwtSecret)
-                .parseClaimsJws(token).body
-        return claims.subject == user.email && claims.issuer == jwtIssuer
-                && Date().before(claims.expiration)
+        val claimsJws = Jwts.parserBuilder()
+            .setSigningKey(jwtSecret.toByteArray())
+            .build()
+            .parseClaimsJws(token)
+
+        return claimsJws.body.subject == user.email && claimsJws.body.issuer == jwtIssuer
+                && Date().before(claimsJws.body.expiration)
     }
 
     fun updateToken(user: User): User {
